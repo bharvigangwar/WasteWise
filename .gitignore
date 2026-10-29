@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Environment variables (never commit secrets)
+.env
+.env.local
+
+# Build output
+.next/
+dist/
+
+# OS / editor files
+.DS_Store
+.vscode/
