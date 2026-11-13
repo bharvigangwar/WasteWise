@@ -14,6 +14,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/authRoutes');
+const contributionRoutes = require('./routes/contributionRoutes');
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.get('/api/health', (req, res) => {
 
 // Mount route modules
 app.use('/api/auth', authRoutes);
+app.use('/api/contributions', contributionRoutes);
 
 // Catch-all handler for undefined routes
 app.use((req, res) => {

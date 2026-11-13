@@ -1,9 +1,9 @@
 # WasteWise: Implementation Progress
 
 ## Project Status Overview
-- Current Day: Day 1 (Auth: backend + frontend) - **COMPLETED**
-- Current Checkpoint: **CHECKPOINT 1**
-- Next Target: Day 2 (Upload + AI Classifier: Phases 4 & 5)
+- Current Day: Day 2 (Upload + AI Classifier) - **COMPLETED**
+- Current Checkpoint: **CHECKPOINT 2**
+- Next Target: Day 3 (Coins + Redemption: Phases 6 & 7)
 
 ---
 
@@ -41,14 +41,32 @@
 
 ---
 
+### Day 2: Upload + AI Classifier — [COMPLETED]
+- [x] **Phase 4: Cloud Storage, Multer & Contribution Model**
+  - Configured Cloudinary integration (`server/config/cloudinary.js`) supporting direct stream uploads with graceful data-URL fallbacks for offline local development.
+  - Created Multer memory storage middleware (`server/middleware/upload.js`) enforcing a 5 MB maximum file size limit and restricting file types to JPG, PNG, and WebP.
+  - Created Contribution model (`server/models/Contribution.js`) tracking user, `imageUrl`, SHA-256 `imageHash`, `declaredCategory`, `aiCategory`, `confidence`, `aiReason`, `status` (`approved`, `rejected`, `pending_review`), `coinsAwarded`, and `reviewedBy`.
+  - Implemented Contribution controller (`server/controllers/contributionController.js`) and routes (`server/routes/contributionRoutes.js`):
+    - `POST /api/contributions`: Protected citizen route. Enforces duplicate image rejection via SHA-256 hash match, enforces daily submission limit (5 uploads/day), uploads image, calls Gemini Vision AI, and assigns verification verdict.
+    - `GET /api/contributions/my`: Retrieves all submissions by the logged-in citizen.
+    - `GET /api/contributions/:id`: Retrieves individual contribution details.
+  - Mounted `/api/contributions` in `server/index.js`.
+  - Created Frontend Upload page (`client/src/app/upload/page.js`) with category selector (Wet, Dry, Recyclable, E-waste, Hazardous), live photo preview, submission loader, and real-time AI verdict card displaying status badge, confidence percentage, observation reasoning, and awarded Green Coins.
+  - Added "Upload Waste" quick link to `Navbar` and Citizen dashboard view.
+- [x] **Phase 5: Gemini Vision Classifier Service & Verification**
+  - Installed official `@google/genai` SDK in `server`.
+  - Created Gemini vision classifier service (`server/services/aiClassifier.js`):
+    - Structured prompt requesting strict classification into `wet`, `dry`, `recyclable`, `ewaste`, `hazardous`, or `unknown`.
+    - Configured model fallback with `GEMINI_MODEL` (default: `gemini-2.5-flash`).
+    - Defensive JSON parser stripping Markdown code fences, validating against allowed categories, clamping confidence to `[0, 1]`, and returning fallback on malformed responses or missing API keys.
+  - Created comprehensive test script (`server/scripts/testClassifier.js`) testing parser edge cases and running sample image classification. Verified all tests pass.
+
+---
+
 ### Upcoming Phases
-- **Day 2: Upload + AI Classifier**
-  - Phase 4: Cloudinary configuration, multer memory storage upload middleware, Contribution model, `POST /api/contributions`, client upload page with image preview.
-  - Phase 5: `services/aiClassifier.js` with Google Gemini vision (`@google/genai`), prompt engineering for strict JSON category + confidence output, fallback handling, and test script on sample image.
-  - CHECKPOINT 2.
 - **Day 3: Coins + Redemption**
-  - Phase 6: ProgramRule model, approval business rules, CoinTransaction append-only ledger, wallet service, citizen dashboard coin history.
-  - Phase 7: Business & Redemption models, business approval workflow, partner directory, redemption code generation & confirmation.
+  - Phase 6: ProgramRule model with defaults, approval business rules, CoinTransaction append-only ledger, `coinService.js` (balance, earn), wallet endpoint, citizen dashboard (balance, history, contribution list with status badges).
+  - Phase 7: Business and Redemption models, business registration (needs admin approval), partner list page, redemption create, confirm and expire logic, business dashboard.
   - CHECKPOINT 3.
 - **Day 4: Admin Panel**
   - Phase 8: Admin endpoints & UI for reviewing borderline contributions, approving businesses, configuring program rules, and platform analytics.
@@ -72,6 +90,11 @@
 | `CLIENT_URL` | Allowed client origin for CORS | `http://localhost:3000` |
 | `ADMIN_EMAIL` | Default admin email for seed script | `admin@wastewise.com` |
 | `ADMIN_PASSWORD` | Default admin password for seed script | `Admin@123456` |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud account name | *(User-provided)* |
+| `CLOUDINARY_API_KEY` | Cloudinary API Key | *(User-provided)* |
+| `CLOUDINARY_API_SECRET` | Cloudinary API Secret | *(User-provided)* |
+| `GEMINI_API_KEY` | Google Gemini API Key | *(User-provided)* |
+| `GEMINI_MODEL` | Gemini vision model name | `gemini-2.5-flash` |
 
 ### Client (`client/.env.example` / `client/.env.local`)
 | Variable | Description | Default |
@@ -81,7 +104,7 @@
 ---
 
 ## Verification Run Log
-- **Server Health Endpoint**: Verified mock request to `GET /api/health` returned HTTP 200 `{ success: true, message: 'WasteWise API is running' }`.
-- **Authentication & Security Unit Verification**: Tested bcrypt password salt/hash/compare, JWT signing & decoding, and `authorize('admin')` role enforcement.
-- **Server Files Syntax**: `node --check` passed across all server files (`index.js`, `config/db.js`, `middleware/errorHandler.js`, `middleware/auth.js`, `models/User.js`, `controllers/authController.js`, `routes/authRoutes.js`, `scripts/seedAdmin.js`).
-- **Client Components**: All client files verified in place with proper syntax and hooks.
+- **AI Classifier Unit & Fallback**: Ran `node server/scripts/testClassifier.js`. Verified clean JSON parsing, Markdown code fence stripping, invalid category fallback, confidence range clamping, and missing API key fallback handling.
+- **Contribution Rules Unit Verification**: Tested SHA-256 duplicate image hash detection and automated status assignment thresholds (approved at >= 0.75, rejected at < 0.40/unknown, pending review for borderline/mismatch).
+- **Server Routes & Health**: Re-verified `GET /api/health` returning HTTP 200 with newly mounted `/api/contributions` route.
+- **Frontend Build & File Checks**: Verified `client/src/app/upload/page.js`, updated `Navbar.js`, and updated `dashboard/page.js` syntax and structure.

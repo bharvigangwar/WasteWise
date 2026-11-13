@@ -65,14 +65,22 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-6 text-emerald-900">
-              <h3 className="font-semibold text-lg text-emerald-950 mb-1">
-                Next Steps for Citizens (Day 2)
-              </h3>
-              <p className="text-sm text-emerald-800">
-                You will be able to upload household segregated waste photos (Wet, Dry, Recyclable, E-waste, Hazardous)
-                for instant AI classification by Google Gemini and earn Green Coins.
-              </p>
+            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-6 text-emerald-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-lg text-emerald-950 mb-1">
+                  Ready to Segregate & Earn?
+                </h3>
+                <p className="text-sm text-emerald-800">
+                  Upload photos of your household waste (Wet, Dry, Recyclable, E-waste, Hazardous)
+                  for instant AI verification with Google Gemini and earn Green Coins.
+                </p>
+              </div>
+              <a
+                href="/upload"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-xs text-sm text-center whitespace-nowrap transition"
+              >
+                Upload Waste Photo →
+              </a>
             </div>
           </section>
         )}

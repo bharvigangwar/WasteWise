@@ -41,6 +41,15 @@ export default function Navbar() {
                 Dashboard
               </Link>
 
+              {user?.role === 'citizen' && (
+                <Link
+                  href="/upload"
+                  className="bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition flex items-center gap-1 shadow-xs"
+                >
+                  <span>📷</span> Upload Waste
+                </Link>
+              )}
+
               {/* User badge */}
               <div className="flex items-center space-x-2 bg-emerald-800/80 px-3 py-1.5 rounded-full text-xs font-medium">
                 <span className="text-emerald-200">{user?.name}</span>
