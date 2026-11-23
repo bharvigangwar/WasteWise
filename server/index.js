@@ -18,6 +18,7 @@ const contributionRoutes = require('./routes/contributionRoutes');
 const walletRoutes = require('./routes/walletRoutes');
 const businessRoutes = require('./routes/businessRoutes');
 const redemptionRoutes = require('./routes/redemptionRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/api/contributions', contributionRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/redemptions', redemptionRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Catch-all handler for undefined routes
 app.use((req, res) => {

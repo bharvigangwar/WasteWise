@@ -41,6 +41,9 @@ export default function DashboardPage() {
   const [isRegisteringBiz, setIsRegisteringBiz] = useState(false);
   const [regError, setRegError] = useState('');
 
+  // Admin stats state
+  const [adminStats, setAdminStats] = useState(null);
+
   const [loadingData, setLoadingData] = useState(true);
 
   /**
@@ -78,6 +81,11 @@ export default function DashboardPage() {
         }
         if (redemptionsRes.status === 'fulfilled' && redemptionsRes.value.data?.success) {
           setBusinessRedemptions(redemptionsRes.value.data.data.redemptions || []);
+        }
+      } else if (user.role === 'admin') {
+        const statsRes = await api.get('/admin/stats');
+        if (statsRes.data?.success) {
+          setAdminStats(statsRes.data.data);
         }
       }
     } catch (err) {
@@ -746,42 +754,69 @@ export default function DashboardPage() {
         {/* ---------------- ADMIN DASHBOARD ---------------- */}
         {user?.role === 'admin' && (
           <section className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-900">Administrator Console</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Administrator Console</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Live platform metrics & operations overview</p>
+              </div>
+              <Link
+                href="/admin"
+                className="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-xs transition inline-flex items-center gap-1.5"
+              >
+                <span>🛡️</span> Open Full Admin Panel →
+              </Link>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
-              <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-                <div className="text-sm font-medium text-gray-500">Pending Reviews</div>
-                <div className="text-3xl font-extrabold text-amber-600 mt-2">0</div>
-                <p className="text-xs text-gray-400 mt-2">Low-confidence uploads (Day 4)</p>
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pending Reviews</div>
+                <div className="text-3xl font-black text-amber-600 mt-2">
+                  {adminStats?.contributions?.pendingReview ?? 0}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Borderline AI submissions</p>
               </div>
 
-              <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-                <div className="text-sm font-medium text-gray-500">Partner Approvals</div>
-                <div className="text-3xl font-extrabold text-blue-600 mt-2">0</div>
-                <p className="text-xs text-gray-400 mt-2">New business requests (Day 4)</p>
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Partner Approvals</div>
+                <div className="text-3xl font-black text-blue-600 mt-2">
+                  {adminStats?.businesses?.pendingApproval ?? 0}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Merchant requests</p>
               </div>
 
-              <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-                <div className="text-sm font-medium text-gray-500">Coins Issued</div>
-                <div className="text-3xl font-extrabold text-emerald-600 mt-2">0 🪙</div>
-                <p className="text-xs text-gray-400 mt-2">Ledger total</p>
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Coins Issued</div>
+                <div className="text-3xl font-black text-emerald-600 mt-2">
+                  {adminStats?.coins?.issued ?? 0} 🪙
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Redeemed: {adminStats?.coins?.redeemed ?? 0}</p>
               </div>
 
-              <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-                <div className="text-sm font-medium text-gray-500">Program Rules</div>
-                <div className="text-3xl font-extrabold text-purple-600 mt-2">Active</div>
-                <p className="text-xs text-gray-400 mt-2">Rule configuration (Day 4)</p>
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Citizens</div>
+                <div className="text-3xl font-black text-purple-700 mt-2">
+                  {adminStats?.users?.citizens ?? 0}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Active accounts</p>
               </div>
             </div>
 
-            <div className="bg-purple-50 border border-purple-100 rounded-xl p-6 text-purple-900">
-              <h3 className="font-semibold text-lg text-purple-950 mb-1">
-                Admin Controls (Day 4)
-              </h3>
-              <p className="text-sm text-purple-800">
-                You will be able to review borderline AI classifications, approve or reject partner businesses,
-                and configure coin values and daily upload limits.
-              </p>
+            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-6 text-purple-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-lg text-purple-950 mb-1">
+                  Ready to Manage Platform Operations?
+                </h3>
+                <p className="text-xs text-purple-800">
+                  Review borderline waste submissions to award Green Coins, approve partner businesses,
+                  and tune program reward rates and confidence thresholds.
+                </p>
+              </div>
+              <Link
+                href="/admin"
+                className="bg-purple-700 hover:bg-purple-800 text-white font-bold px-6 py-3 rounded-xl shadow-xs text-xs text-center whitespace-nowrap transition"
+              >
+                Launch Admin Console →
+              </Link>
             </div>
           </section>
         )}

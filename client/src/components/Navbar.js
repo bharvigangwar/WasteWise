@@ -57,6 +57,15 @@ export default function Navbar() {
                 </Link>
               )}
 
+              {user?.role === 'admin' && (
+                <Link
+                  href="/admin"
+                  className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition flex items-center gap-1 shadow-xs"
+                >
+                  <span>🛡️</span> Admin Panel
+                </Link>
+              )}
+
               {/* User badge */}
               <div className="flex items-center space-x-2 bg-emerald-800/80 px-3 py-1.5 rounded-full text-xs font-medium">
                 <span className="text-emerald-200">{user?.name}</span>
