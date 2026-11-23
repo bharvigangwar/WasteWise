@@ -1,9 +1,9 @@
 # WasteWise: Implementation Progress
 
 ## Project Status Overview
-- Current Day: Day 2 (Upload + AI Classifier) - **COMPLETED**
-- Current Checkpoint: **CHECKPOINT 2**
-- Next Target: Day 3 (Coins + Redemption: Phases 6 & 7)
+- Current Day: Day 3 (Coins + Redemption) - **COMPLETED**
+- Current Checkpoint: **CHECKPOINT 3**
+- Next Target: Day 4 (Admin Panel: Phase 8)
 
 ---
 
@@ -63,13 +63,44 @@
 
 ---
 
+### Day 3: Coins + Redemption — [COMPLETED]
+- [x] **Phase 6: Ledger Economy, Coin Service & Citizen Wallet**
+  - Created singleton `ProgramRule` model (`server/models/ProgramRule.js`) with default coins per category (`wet`: 10, `dry`: 10, `recyclable`: 15, `ewaste`: 25, `hazardous`: 20), confidence threshold (0.75), daily submission quota (5), redemption constraints (min 20, max 500), and rupee conversion rate (₹1/coin).
+  - Created append-only `CoinTransaction` ledger model (`server/models/CoinTransaction.js`) with transaction types `earn`, `redeem`, `refund`, and `adjust`. User balance is strictly derived from the sum of transaction amounts.
+  - Implemented `coinService.js` (`server/services/coinService.js`):
+    - `getBalance`: Aggregates user ledger entries dynamically.
+    - `recordEarn`: Records positive credit entries upon verified waste contributions.
+    - `recordRedeem`: Validates user balance and records debit entries upon voucher creation.
+    - `recordRefund`: Restores coins for expired or cancelled vouchers.
+    - `getTransactions`: Retrieves paginated user transaction history.
+  - Updated `contributionController.js` to dynamically query `ProgramRule`, award category-configured coins, and credit coins via `coinService.recordEarn` upon immediate AI approval.
+  - Implemented Wallet controller (`server/controllers/walletController.js`) and routes (`server/routes/walletRoutes.js`):
+    - `GET /api/wallet`: Returns live calculated balance, rupee valuation, and recent transactions.
+    - `GET /api/wallet/transactions`: Returns paginated ledger entries.
+- [x] **Phase 7: Business Partner & Voucher Redemption Workflow**
+  - Created `Business` model (`server/models/Business.js`) for partner merchants with location, category, discount offers, and `isApproved` status.
+  - Created `Redemption` model (`server/models/Redemption.js`) for discount vouchers with unique alphanumeric codes (`WW-XXXXXX`), coin amount, rupee value, 24-hour expiration timestamp, and completion status.
+  - Implemented Business controller (`server/controllers/businessController.js`) and routes (`server/routes/businessRoutes.js`):
+    - `POST /api/business/register`: Merchant profile registration and updating.
+    - `GET /api/business/profile`: Current merchant profile lookup.
+    - `GET /api/business/partners`: Public directory of approved local businesses.
+  - Implemented Redemption controller (`server/controllers/redemptionController.js`) and routes (`server/routes/redemptionRoutes.js`):
+    - `POST /api/redemptions`: Citizen initiates redemption voucher, deducting coins from ledger and generating a 24-hour code.
+    - `POST /api/redemptions/confirm`: Merchant validates code, checks store ownership, prevents duplicate reuse, and completes transaction.
+    - `POST /api/redemptions/:id/cancel`: Citizen cancels unredeemed voucher, immediately refunding coins back to their ledger.
+    - `GET /api/redemptions/my`: Citizen voucher history with automatic refunding for expired vouchers.
+    - `GET /api/redemptions/business`: Merchant's customer redemption history.
+  - Mounted `/api/wallet`, `/api/business`, and `/api/redemptions` in `server/index.js`.
+  - Built Partner Directory and Redemption page (`client/src/app/partners/page.js`) with category filtering and interactive voucher generation modal.
+  - Upgraded Citizen Dashboard: Added live ledger balance card, submissions list with status badges, append-only transaction history table, and active voucher management with cancellation.
+  - Upgraded Business Dashboard: Added partner registration form, verification status banner, voucher verification and redemption input form, and customer redemption log.
+  - Updated `Navbar.js` with direct "Partners" directory navigation.
+
+---
+
 ### Upcoming Phases
-- **Day 3: Coins + Redemption**
-  - Phase 6: ProgramRule model with defaults, approval business rules, CoinTransaction append-only ledger, `coinService.js` (balance, earn), wallet endpoint, citizen dashboard (balance, history, contribution list with status badges).
-  - Phase 7: Business and Redemption models, business registration (needs admin approval), partner list page, redemption create, confirm and expire logic, business dashboard.
-  - CHECKPOINT 3.
 - **Day 4: Admin Panel**
-  - Phase 8: Admin endpoints & UI for reviewing borderline contributions, approving businesses, configuring program rules, and platform analytics.
+  - Phase 8: Admin endpoints & UI for reviewing borderline contributions (`pending_review`), approving businesses, configuring program rules (coins, thresholds, quotas), and viewing system stats.
   - CHECKPOINT 4.
 - **Day 5: Hardening + Polish**
   - Phase 9: Input validation, rate limiting, responsive polish, comprehensive happy-path E2E script, and production README.
@@ -104,7 +135,7 @@
 ---
 
 ## Verification Run Log
-- **AI Classifier Unit & Fallback**: Ran `node server/scripts/testClassifier.js`. Verified clean JSON parsing, Markdown code fence stripping, invalid category fallback, confidence range clamping, and missing API key fallback handling.
-- **Contribution Rules Unit Verification**: Tested SHA-256 duplicate image hash detection and automated status assignment thresholds (approved at >= 0.75, rejected at < 0.40/unknown, pending review for borderline/mismatch).
-- **Server Routes & Health**: Re-verified `GET /api/health` returning HTTP 200 with newly mounted `/api/contributions` route.
-- **Frontend Build & File Checks**: Verified `client/src/app/upload/page.js`, updated `Navbar.js`, and updated `dashboard/page.js` syntax and structure.
+- **Day 3 Backend Syntax**: `node --check` passed across `ProgramRule.js`, `CoinTransaction.js`, `Business.js`, `Redemption.js`, `coinService.js`, `walletController.js`, `businessController.js`, `redemptionController.js`, and `index.js`.
+- **Day 3 Business Rules Unit**: Verified unique voucher code regex pattern (`WW-XXXXXX`), ledger balance summation calculation (+earn, -redeem, +refund), and redemption boundary checks.
+- **Server Health & Routes**: Verified `GET /api/health` returning HTTP 200 with `/api/wallet`, `/api/business`, and `/api/redemptions` cleanly mounted.
+- **Frontend Day 3 Files**: Verified existence and non-empty structure of `client/src/app/partners/page.js`, updated `client/src/app/dashboard/page.js`, and updated `client/src/components/Navbar.js`.

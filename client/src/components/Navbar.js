@@ -32,6 +32,13 @@ export default function Navbar() {
             Home
           </Link>
 
+          <Link
+            href="/partners"
+            className="text-emerald-100 hover:text-white px-3 py-1.5 rounded-md text-sm font-medium transition"
+          >
+            Partners
+          </Link>
+
           {isAuthenticated ? (
             <>
               <Link

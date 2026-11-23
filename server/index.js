@@ -15,6 +15,9 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const contributionRoutes = require('./routes/contributionRoutes');
+const walletRoutes = require('./routes/walletRoutes');
+const businessRoutes = require('./routes/businessRoutes');
+const redemptionRoutes = require('./routes/redemptionRoutes');
 
 const app = express();
 
@@ -42,6 +45,9 @@ app.get('/api/health', (req, res) => {
 // Mount route modules
 app.use('/api/auth', authRoutes);
 app.use('/api/contributions', contributionRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/business', businessRoutes);
+app.use('/api/redemptions', redemptionRoutes);
 
 // Catch-all handler for undefined routes
 app.use((req, res) => {

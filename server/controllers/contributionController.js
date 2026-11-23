@@ -7,8 +7,10 @@
 
 const crypto = require('crypto');
 const Contribution = require('../models/Contribution');
+const ProgramRule = require('../models/ProgramRule');
 const { uploadImageBuffer } = require('../config/cloudinary');
 const { classifyWaste } = require('../services/aiClassifier');
+const coinService = require('../services/coinService');
 
 /**
  * createContribution handles submission of a new waste photo.
@@ -55,7 +57,10 @@ const createContribution = async (req, res, next) => {
       });
     }
 
-    // Rule 2: Enforce daily contribution limit (default: 5 submissions per calendar day)
+    // Load dynamic program rules
+    const programRules = await ProgramRule.getRules();
+
+    // Rule 2: Enforce daily contribution limit from program rules
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -64,11 +69,11 @@ const createContribution = async (req, res, next) => {
       createdAt: { $gte: startOfDay },
     });
 
-    const dailyContributionLimit = 5;
-    if (todaySubmissionsCount >= dailyContributionLimit) {
+    const dailyLimit = programRules.dailyContributionLimit || 5;
+    if (todaySubmissionsCount >= dailyLimit) {
       return res.status(400).json({
         success: false,
-        message: `You have reached your daily contribution limit of ${dailyContributionLimit} submissions today.`,
+        message: `You have reached your daily contribution limit of ${dailyLimit} submissions today.`,
       });
     }
 
@@ -82,15 +87,24 @@ const createContribution = async (req, res, next) => {
     // 3. Call Google Gemini Vision classifier
     const aiResult = await classifyWaste(req.file.buffer, req.file.mimetype);
 
-    // Rule 3: Evaluate verification status based on AI result and confidence threshold
-    const confidenceThreshold = 0.75;
+    // Rule 3: Evaluate verification status based on AI result and dynamic confidence threshold
+    const confidenceThreshold = programRules.confidenceThreshold || 0.75;
     let status = 'pending_review';
     let coinsAwarded = 0;
+
+    // Determine coins configured for this specific waste category
+    let categoryCoins = 10;
+    if (programRules.coinsPerCategory) {
+      categoryCoins = programRules.coinsPerCategory.get
+        ? programRules.coinsPerCategory.get(category)
+        : programRules.coinsPerCategory[category];
+    }
+    categoryCoins = Number(categoryCoins) || 10;
 
     if (aiResult.category === category && aiResult.confidence >= confidenceThreshold) {
       // AI confirms citizen declaration with high confidence
       status = 'approved';
-      coinsAwarded = 10; // Default award per verified contribution
+      coinsAwarded = categoryCoins;
     } else if (aiResult.confidence < 0.40 || aiResult.category === 'unknown') {
       // Very low confidence or unidentifiable image
       status = 'rejected';
@@ -113,6 +127,16 @@ const createContribution = async (req, res, next) => {
       status,
       coinsAwarded,
     });
+
+    // If approved immediately by AI, credit Green Coins to citizen's append-only ledger
+    if (status === 'approved' && coinsAwarded > 0) {
+      await coinService.recordEarn(
+        req.user._id,
+        coinsAwarded,
+        contribution._id,
+        `Verified ${category} waste segregation reward`
+      );
+    }
 
     res.status(201).json({
       success: true,
