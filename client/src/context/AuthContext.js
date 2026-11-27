@@ -8,7 +8,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../lib/api';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext(null as any);
 
 /**
  * AuthProvider wraps the application and supplies authentication state to all components.
